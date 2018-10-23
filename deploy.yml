@@ -1,0 +1,23 @@
+---
+- hosts: Nodes
+  vars:
+    ImageName: "478841571343.dkr.ecr.ap-south-1.amazonaws.com/characters"
+    Namespace: "default"
+    imageTag: "v1"
+  #remote_user: ansible
+  #become: true
+  gather_facts: no
+  connection: local
+  tasks:
+    - name: Create Namespace {{ Namespace }}
+      command: "kubectl create namespace {{ Namespace }}"
+      ignore_errors: yes
+    - name: Deploy emoji-search
+      command: "/usr/local/bin/helm install --name=emoji-search-{{ Namespace }}  --namespace={{ Namespace }} ../
+      app --set image.repository={{ ImageName }} --set image.tag={{ imageTag }} --set namespace={{ Namespace }}"
+      delegate_to: localhost
+      ignore_errors: yes
+    - name: Update emoji-search
+      command: "/usr/local/bin/helm upgrade --wait --recreate-pods --namespace={{ Namespace }} --set image.repository={{ ImageName }} --set image.tag={{ imageTag }} --set namespace={{ Namespace }} emoji-search-{{ Namespace }} ../emoji-search"
+      delegate_to: localhost
+      ignore_errors: yes
